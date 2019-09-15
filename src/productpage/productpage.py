@@ -44,10 +44,12 @@ except ImportError:
 http_client.HTTPConnection.debuglevel = 1
 
 app = Flask(__name__)
-logging.basicConfig(filename='microservice.log',filemode='w',level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(process)d: %(message)s')
 requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
+werkzeug_log = logging.getLogger('werkzeug')
+werkzeug_log.setLevel(logging.ERROR)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 
@@ -269,7 +271,12 @@ def front():
 
 # The API:
 @app.route('/api/v1/products')
+@trace()
 def productsRoute():
+    headers = getForwardHeaders(request)
+    trace_id = headers['X-B3-TraceId']
+    span_id = headers['X-B3-SpanId']
+    logging.info('[productpage,{0},{1}] Getting all products list'.format(trace_id, span_id))
     return json.dumps(getProducts()), 200, {'Content-Type': 'application/json'}
 
 
@@ -277,6 +284,9 @@ def productsRoute():
 @trace()
 def productRoute(product_id):
     headers = getForwardHeaders(request)
+    trace_id = headers['X-B3-TraceId']
+    span_id = headers['X-B3-SpanId']
+    logging.info('[productpage,{0},{1}] Asking for details of product {2}'.format(trace_id, span_id, product_id))
     status, details = getProductDetails(product_id, headers)
     return json.dumps(details), status, {'Content-Type': 'application/json'}
 
@@ -285,6 +295,9 @@ def productRoute(product_id):
 @trace()
 def reviewsRoute(product_id):
     headers = getForwardHeaders(request)
+    trace_id = headers['X-B3-TraceId']
+    span_id = headers['X-B3-SpanId']
+    logging.info('[productpage,{0},{1}] Asking for reviews of product {2}'.format(trace_id, span_id, product_id))
     status, reviews = getProductReviews(product_id, headers)
     return json.dumps(reviews), status, {'Content-Type': 'application/json'}
 
@@ -293,6 +306,9 @@ def reviewsRoute(product_id):
 @trace()
 def ratingsRoute(product_id):
     headers = getForwardHeaders(request)
+    trace_id = headers['X-B3-TraceId']
+    span_id = headers['X-B3-SpanId']
+    logging.info('[productpage,{0},{1}] Asking for ratings of product {2}'.format(trace_id, span_id, product_id))
     status, ratings = getProductRatings(product_id, headers)
     return json.dumps(ratings), status, {'Content-Type': 'application/json'}
 
