@@ -15,6 +15,7 @@
  *******************************************************************************/
 package application.rest;
 
+import java.time.LocalDateTime;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -91,7 +92,8 @@ public class LibertyRestEndpoint extends Application {
       cb.property("com.ibm.ws.jaxrs.client.connection.timeout", timeout);
       cb.property("com.ibm.ws.jaxrs.client.receive.timeout", timeout);
       Client client = cb.build();
-      WebTarget ratingsTarget = client.target(ratings_service + "/" + productId);
+      String uri = ratings_service + "/" + productId;
+      WebTarget ratingsTarget = client.target(uri);
       Invocation.Builder builder = ratingsTarget.request(MediaType.APPLICATION_JSON);
       for (String header : headers_to_proagate) {
         String value = requestHeaders.getHeaderString(header);
@@ -100,20 +102,22 @@ public class LibertyRestEndpoint extends Application {
         }
       }
       try {
+        log("INFO", requestHeaders, "Calling GET %s", uri);
         Response r = builder.get();
 
         int statusCode = r.getStatusInfo().getStatusCode();
         if (statusCode == Response.Status.OK.getStatusCode()) {
+          log("INFO", requestHeaders, "Ratings service return 200");
           try (StringReader stringReader = new StringReader(r.readEntity(String.class));
                JsonReader jsonReader = Json.createReader(stringReader)) {
             return jsonReader.readObject();
           }
         } else {
-          System.out.println("Error: unable to contact " + ratings_service + " got status of " + statusCode);
+          log("ERROR", requestHeaders, "Unable to contact %s got status of %s", ratings_service, String.valueOf(statusCode));
           return null;
         }
       } catch (ProcessingException e) {
-        System.err.println("Error: unable to contact " + ratings_service + " got exception " + e);
+        log("ERROR", requestHeaders, "Unable to contact %s got exception " + e, ratings_service);
         return null;
       }
     }
@@ -126,12 +130,13 @@ public class LibertyRestEndpoint extends Application {
 
     @GET
     @Path("/reviews/{productId}")
-    public Response bookReviewsById(@PathParam("productId") int productId, @Context HttpHeaders requestHeaders) {
+    public Response bookReviewsById(@PathParam("productId") int productId, @Context HttpHeaders headers) {
+      log("INFO", headers, "Finding reviews from product %s", String.valueOf(productId));
       int starsReviewer1 = -1;
       int starsReviewer2 = -1;
 
       if (ratings_enabled) {
-        JsonObject ratingsResponse = getRatings(Integer.toString(productId), requestHeaders);
+        JsonObject ratingsResponse = getRatings(Integer.toString(productId), headers);
         if (ratingsResponse != null) {
           if (ratingsResponse.containsKey("ratings")) {
             JsonObject ratings = ratingsResponse.getJsonObject("ratings");
@@ -143,9 +148,30 @@ public class LibertyRestEndpoint extends Application {
             }
           }
         }
-      } 
+      } else {
+        log("WARN", headers, "Ratings disabled");
+      }
 
       String jsonResStr = getJsonResponse(Integer.toString(productId), starsReviewer1, starsReviewer2);
       return Response.ok().type(MediaType.APPLICATION_JSON).entity(jsonResStr).build();
+    }
+
+    private void log(String level, HttpHeaders requestHeaders, String logText, String... params) {
+      final String logLevel = String.format("[%s]", level);
+      final String logTimestamp = String.format("[%s]", LocalDateTime.now());
+
+      final String logService = String.format("[%s]", "reviews");
+      final String traceId = requestHeaders.getHeaderString("x-b3-traceid");
+      final String spanId = requestHeaders.getHeaderString("x-b3-spanid");
+      final String logTracing = String.format("[reviews,%s,%s]", traceId, spanId);
+
+      final String logClass = String.format("[%s]", this.getClass().getSimpleName());
+
+      final String log = logLevel + logTimestamp + logService + logTracing + logClass + ": " + String.format(logText, params);
+      if ("ERROR".equals(level)) {
+        System.err.println(log);
+      } else {
+        System.out.println(log);
+      }
     }
 }
