@@ -89,12 +89,23 @@ service_dict = {
 }
 
 def getForwardHeaders(request):
-    headers = {
-        'x-request-id': request.headers.get('x-request-id'),
-        'x-b3-traceid': request.headers.get('x-b3-traceid'),
-        'x-b3-spanid': request.headers.get('x-b3-spanid'),
-        'x-b3-sampled': request.headers.get('x-b3-sampled')
-    }
+    headers = {}
+
+    if 'user' in session:
+        headers['end-user'] = session['user']
+
+    incoming_headers = ['x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-sampled']
+
+    # Add user-agent to headers manually
+    if 'user-agent' in request.headers:
+        headers['user-agent'] = request.headers.get('user-agent')
+
+    for ihdr in incoming_headers:
+        val = request.headers.get(ihdr)
+        if val is not None:
+            headers[ihdr] = val
+            #print "incoming: "+ihdr+":"+val
+
     return headers
 
 
