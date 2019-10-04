@@ -15,6 +15,9 @@
  *******************************************************************************/
 package application.rest;
 
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -32,7 +35,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.StringReader;
 
 @Path("/")
 public class LibertyRestEndpoint extends Application {
@@ -150,6 +152,11 @@ public class LibertyRestEndpoint extends Application {
         }
       } else {
         log("WARN", headers, "Ratings disabled");
+        StringWriter sw = new StringWriter();
+        final NullPointerException ex = new NullPointerException();
+        ex.printStackTrace(new PrintWriter(sw));
+        log("ERROR", headers, sw.toString());
+        throw ex;
       }
 
       String jsonResStr = getJsonResponse(Integer.toString(productId), starsReviewer1, starsReviewer2);
