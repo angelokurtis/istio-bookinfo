@@ -167,18 +167,30 @@ public class LibertyRestEndpoint extends Application {
       final String logLevel = String.format("[%s]", level);
       final String logTimestamp = String.format("[%s]", LocalDateTime.now());
 
-      final String logService = String.format("[%s]", "reviews");
       final String traceId = requestHeaders.getHeaderString("x-b3-traceid");
       final String spanId = requestHeaders.getHeaderString("x-b3-spanid");
-      final String logTracing = String.format("[reviews,%s,%s]", traceId, spanId);
+      final String logTracing = String.format("[reviews-%s,%s,%s]", getVersion(), traceId, spanId);
 
       final String logClass = String.format("[%s]", this.getClass().getSimpleName());
 
-      final String log = logLevel + logTimestamp + logService + logTracing + logClass + ": " + String.format(logText, params);
+      final String log = logLevel + logTimestamp + logTracing + logClass + ": " + String.format(logText, params);
       if ("ERROR".equals(level)) {
         System.err.println(log);
       } else {
         System.out.println(log);
       }
+    }
+
+    private String getVersion() {
+      if (!ratings_enabled) {
+        return "v1";
+      }
+      if (star_color.equalsIgnoreCase("black")) {
+        return "v2";
+      }
+      if (star_color.equalsIgnoreCase("red")) {
+        return "v3";
+      }
+      return "";
     }
 }
