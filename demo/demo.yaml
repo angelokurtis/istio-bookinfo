@@ -57,7 +57,7 @@ spec:
       containers:
       - name: details
         image: docker.io/kurtis/examples-bookinfo-details-v1:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
@@ -106,7 +106,7 @@ spec:
       containers:
       - name: ratings
         image: docker.io/kurtis/examples-bookinfo-ratings-v1:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
@@ -155,7 +155,7 @@ spec:
       containers:
       - name: reviews
         image: docker.io/kurtis/examples-bookinfo-reviews-v1:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
@@ -182,7 +182,7 @@ spec:
       containers:
       - name: reviews
         image: docker.io/kurtis/examples-bookinfo-reviews-v2:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
@@ -209,7 +209,7 @@ spec:
       containers:
       - name: reviews
         image: docker.io/kurtis/examples-bookinfo-reviews-v3:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
@@ -258,7 +258,7 @@ spec:
       containers:
       - name: productpage
         image: docker.io/kurtis/examples-bookinfo-productpage-v1:1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 9080
 ---
