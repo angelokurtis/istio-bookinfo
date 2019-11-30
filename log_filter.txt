@@ -1,0 +1,1 @@
+resource.labels.container_name=reviews AND 37f18153f0d847e54a2031c83560a254
